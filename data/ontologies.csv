@@ -1,0 +1,3 @@
+Ontology,Description,Location,Sparql
+"Pizza","Pizza With Toppings","pizza/pizza.owl","pizza/pizza_sparql.csv"
+"DeFi","Decentralized Finance","defi/defi.ttl","defi/defi_sparql.csv"

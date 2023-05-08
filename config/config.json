@@ -1,0 +1,12 @@
+[
+  {
+    "ontology": "pizza",
+    "path": "data/pizza/pizza.owl",
+    "sparql": "data/pizza/pizza_sparql"
+  },
+    {
+    "ontology": "pizza111",
+    "path": "data/pizza/pizza.owl111",
+    "sparql": "data/pizza/pizza_sparql111"
+  }
+]

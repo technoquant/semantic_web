@@ -1,0 +1,125 @@
+Name,Endpoint,Sparql
+"How does the data look like?","data\pizza\pizza.owl","
+SELECT *
+WHERE {
+    ?subject ?predicate ?object .
+}
+LIMIT 10
+
+
+"
+"How many triplets are contained in the dataset?","data\pizza\pizza.owl","
+SELECT (COUNT(*) AS ?no)
+where { ?s ?p ?o  }
+
+
+
+"
+"Which classes are declared in the dataset?","data\pizza\pizza.owl","
+SELECT distinct ?class
+WHERE {
+    ?class a owl:Class
+}
+order by ?class
+
+
+
+"
+"Which classes have instances?","data\pizza\pizza.owl","
+SELECT ?class (count(?instance) as ?numberOfInstances)
+WHERE {
+    ?instance a ?class .
+}
+group by ?class
+order by desc(?numberOfInstances)
+
+
+
+"
+"Stats about properties?","data\pizza\pizza.owl","
+SELECT ?property (COUNT(?property) AS ?propTotal)
+WHERE { ?s ?property ?o . }
+GROUP BY ?property
+ORDER BY DESC(?propTotal)
+
+
+
+"
+"List all hot spices","data\pizza\pizza.owl","
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+SELECT distinct ?s ?type WHERE {
+  ?s rdfs:subClassOf ?restriction .
+  ?restriction owl:onProperty pizza:hasSpiciness .
+  ?restriction owl:someValuesFrom pizza:Hot .
+  OPTIONAL {?s rdf:type ?type }
+}
+
+
+
+"
+"List ALL classes","data\pizza\pizza.owl","
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT DISTINCT ?type
+WHERE {
+  ?s a ?type.
+}
+
+
+
+"
+"List ALL CLASSES of a given Prefix","data\pizza\pizza.owl","
+PREFIX bc: <http://www.co-ode.org/ontologies/pizza/pizza.owl#>
+
+SELECT DISTINCT ?subject ?label ?supertype
+WHERE {
+  ?subject a ?type.
+  FILTER( STRSTARTS(STR(?type),str(bc:)) )
+}
+
+
+
+"
+"List class hierarchy","data\pizza\pizza.owl","
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?subject ?label ?supertype
+WHERE {
+    { ?subject a owl:Class . } UNION { ?individual a ?subject . } .
+    OPTIONAL { ?subject rdfs:subClassOf ?supertype } .
+    OPTIONAL { ?subject rdfs:label ?label }.
+    FILTER (?subject != owl:Class &&
+        ?subject != rdf:List &&
+        ?subject != rdf:Property &&
+        ?subject != rdfs:Class &&
+        ?subject != rdfs:Datatype &&
+        ?subject != rdfs:ContainerMembershipProperty &&
+        ?subject != owl:DatatypeProperty &&
+        ?subject != owl:NamedIndividual &&
+        ?subject != owl:Ontology )
+} ORDER BY ?subject
+
+
+
+
+"
+"List class hierarchy","data\pizza\pizza.owl","
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?subject ?label ?supertype
+WHERE {
+    { ?subject a owl:Class . } UNION { ?individual a ?subject . } .
+    OPTIONAL { ?subject rdfs:subClassOf ?supertype } .
+    OPTIONAL { ?subject rdfs:label ?label }
+} ORDER BY ?subject
+
+
+
+"
