@@ -1,14 +1,25 @@
 import pickle
 
 
-def pickle_knowledge_graph(g, filename):
+def serialize(graph, filename):
+    """
+    Serialize a graph to a file via pickle.
+    :param graph: graph
+    :param filename: filename
+    :return: None
+    """
     output_file = open(filename, 'wb')
-    pickle.dump(g, output_file)
+    pickle.dump(graph, output_file)
     output_file.close()
 
 
-def unpickle_knowledge_graph(filename):
+def deserialize(filename):
+    """
+    Deserialize a file to a graph via pickle.
+    :param filename: filename
+    :return: graph
+    """
     input_file = open(filename, 'rb')
-    g = pickle.load(input_file)
+    graph = pickle.load(input_file)
     input_file.close()
-    return g
+    return graph
