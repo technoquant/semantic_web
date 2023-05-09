@@ -14,7 +14,7 @@ from utilities.ont import get_sparql_query_results
 BASE_PATH = pathlib.Path(__file__).parent.resolve()
 DATA_PATH = BASE_PATH.joinpath("data").resolve()
 df_ontologies = pd.read_csv(DATA_PATH.joinpath("ontologies.csv"))
-ontology_list = df_ontologies["Ontology"].unique()
+ontology_list = df_ontologies["Name"].unique()
 queries_list = pd.DataFrame()
 df_query_results = df_ontologies.copy()
 ontology_view_elements = []
@@ -245,7 +245,7 @@ def ontology_select_dropdown_selected(ontology_selected):
     if ontology_selected is None:
         return [{"label": i, "value": i} for i in ontology_list], True
 
-    df = df_ontologies.query(f'Ontology == "{ontology_selected}"')
+    df = df_ontologies.query(f'Name == "{ontology_selected}"')
     query_file_location = df['Sparql'].unique()[0]
     query_df = pd.read_csv(DATA_PATH.joinpath(query_file_location))
     query_name_list = query_df['Name'].unique()
@@ -268,7 +268,7 @@ def query_select_dropdown_selected(query_selected, ontology_selected):
     if ontology_selected is None or query_selected is None:
         return [{"label": i, "value": i} for i in ontology_list], True, '', True, True
 
-    df = df_ontologies.query(f'Ontology == "{ontology_selected}"')
+    df = df_ontologies.query(f'Name == "{ontology_selected}"')
     query_file_location = df['Sparql'].unique()[0]
     query_df = pd.read_csv(DATA_PATH.joinpath(query_file_location))
     query_df.query(f'Name == "{query_selected}"', inplace=True)
