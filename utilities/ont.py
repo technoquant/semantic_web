@@ -1,11 +1,10 @@
 import pandas as pd
-
 import networkx as nx
 import ontospy
-from ontospy.gendocs.viz.viz_html_single import *
 
 from rdflib import Graph
 from rdflib.extras.external_graph_libs import rdflib_to_networkx_graph
+from ontospy.gendocs.viz.viz_html_single import HTMLVisualizer
 
 
 def get_sparql_query_results(endpoint, query_text):
