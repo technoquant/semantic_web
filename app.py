@@ -11,18 +11,23 @@ from utilities.ont import get_cytoscape_elements
 from utilities.ont import get_sparql_query_results
 
 # configuration details
+#
+# data location
 BASE_PATH = pathlib.Path(__file__).parent.resolve()
 DATA_PATH = BASE_PATH.joinpath("data").resolve()
-df_ontologies = pd.read_csv(DATA_PATH.joinpath("ontologies.csv"))
-ontology_list = df_ontologies["Name"].unique()
+# ontology names
+ontologies_df = pd.read_csv(DATA_PATH.joinpath("ontologies.csv"))
+ontology_names_as_list = ontologies_df["Name"].unique()
+# ontology specific sparql queries
 queries_list = pd.DataFrame()
-df_query_results = df_ontologies.copy()
+df_query_results = ontologies_df.copy()
+# ontology specific cytoscape data elements
 ontology_view_elements = []
 
 # format colors: primary, secondary, success, info, warning, danger, light, dark, link
 # p-2 mb-2 text-left
 title_format = "bg-light text-black text-left"
-footer_format = "bg-dark text-white text-left"
+footer_format = "bg-light text-black text-left"
 accordian_format = "bg-dark text-white text-center"
 accordian_item_format = "bg-light text-black text-center"
 textarea_format = "bg-dark text-white text-left"
@@ -33,18 +38,47 @@ view_control_panel_format = "bg-light text-black text-center"
 # instantiate the Dash server
 #
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.VAPOR, dbc_css])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SKETCHY, dbc_css])
 app.config.suppress_callback_exceptions = True
 
 ####################################################################################################################
 # top container
 #
-top_container = html.H1("Semantic Web Dashboard", className=title_format)
+top_container = \
+    dbc.Row(
+        [
+            dbc.Col(
+                [
+
+                    html.H1("Semantic Web Dashboard", className=title_format),
+                ],
+                width=12,
+            ),
+        ]
+    )
 
 ####################################################################################################################
 # bottom container
 #
-bottom_container = html.H6("Brandeis University International Business School", className=footer_format)
+bottom_container = \
+    dbc.Row(
+        [
+            dbc.Col(
+                [
+                    html.Img(src='/assets/brandeis-logo.png', style={'height': '10%'}),
+                ],
+                width=2,
+            ),
+            dbc.Col(
+                [
+
+                    html.H6("Dashboard developed by faculty and students of the "
+                            "Brandeis University International Business School", className=footer_format)
+                ],
+                width=10,
+            ),
+        ]
+    )
 
 ####################################################################################################################
 # sidebar container
@@ -59,21 +93,21 @@ sidebar_container = html.Div(
                         dcc.Dropdown(
                             id="ontology-select",
                             placeholder="Select",
-                            options=[{"label": i, "value": i} for i in ontology_list],
+                            options=[{"label": i, "value": i} for i in ontology_names_as_list],
                         ),
                         html.Br(),
                         html.P("Select Query", className=accordian_item_format),
                         dcc.Dropdown(
                             id="query-select",
                             disabled=True,
-                            options=[{"label": i, "value": i} for i in ontology_list],
+                            options=[{"label": i, "value": i} for i in ontology_names_as_list],
                         ),
                         html.Br(),
                         html.P("Endpoint", className=accordian_item_format),
                         dcc.Dropdown(
                             id="endpoint-select",
                             disabled=True,
-                            options=[{"label": i, "value": i} for i in ontology_list],
+                            options=[{"label": i, "value": i} for i in ontology_names_as_list],
                         ),
                         html.Br(),
                         html.Div(
@@ -130,7 +164,7 @@ body_container_view = \
                             ),
                         ],
                     ),
-                    ],
+                ],
                 className=view_control_panel_format,
                 width=1,
             ),
@@ -182,7 +216,7 @@ body_container_query = \
                             dash_table.DataTable(
                                 id='query-results-table',
                                 data=df_query_results.to_dict('records'),
-                                columns=[{'id': c, 'name': c} for c in df_ontologies.columns],
+                                columns=[{'id': c, 'name': c} for c in ontologies_df.columns],
 
                                 page_current=0,
                                 page_size=25,
@@ -262,9 +296,9 @@ app.layout = dbc.Container(
 )
 def ontology_select_dropdown_selected(ontology_selected):
     if ontology_selected is None:
-        return [{"label": i, "value": i} for i in ontology_list], True
+        return [{"label": i, "value": i} for i in ontology_names_as_list], True
 
-    df = df_ontologies.query(f'Name == "{ontology_selected}"')
+    df = ontologies_df.query(f'Name == "{ontology_selected}"')
     query_file_location = df['Sparql'].unique()[0]
     query_df = pd.read_csv(DATA_PATH.joinpath(query_file_location))
     query_name_list = query_df['Name'].unique()
@@ -285,9 +319,9 @@ def ontology_select_dropdown_selected(ontology_selected):
 )
 def query_select_dropdown_selected(query_selected, ontology_selected):
     if ontology_selected is None or query_selected is None:
-        return [{"label": i, "value": i} for i in ontology_list], True, '', True, True
+        return [{"label": i, "value": i} for i in ontology_names_as_list], True, '', True, True
 
-    df = df_ontologies.query(f'Name == "{ontology_selected}"')
+    df = ontologies_df.query(f'Name == "{ontology_selected}"')
     query_file_location = df['Sparql'].unique()[0]
     query_df = pd.read_csv(DATA_PATH.joinpath(query_file_location))
     query_df.query(f'Name == "{query_selected}"', inplace=True)
@@ -309,8 +343,8 @@ def query_select_dropdown_selected(query_selected, ontology_selected):
 )
 def submit_button_selected(n_clicks, endpoint_selected, sparql_query_text):
     if n_clicks == 0 or endpoint_selected is None or sparql_query_text is None:
-        data = df_ontologies.to_dict('records')
-        columns = [{'id': c, 'name': c} for c in df_ontologies.columns]
+        data = ontologies_df.to_dict('records')
+        columns = [{'id': c, 'name': c} for c in ontologies_df.columns]
         return data, columns, ontology_view_elements
 
     results_table, results_columns = get_sparql_query_results(endpoint_selected, sparql_query_text)
