@@ -89,23 +89,37 @@ sidebar_container = html.Div(
             [
                 dbc.AccordionItem(
                     [
-                        html.P("Select Ontology", className=accordian_item_format),
+                        html.P("Select Ontology",
+                               className=accordian_item_format),
                         dcc.Dropdown(
                             id="ontology-select",
                             placeholder="Select",
                             options=[{"label": i, "value": i} for i in ontology_names_as_list],
                         ),
                         html.Br(),
-                        html.P("Select Query", className=accordian_item_format),
-                        dcc.Dropdown(
-                            id="query-select",
-                            disabled=True,
-                            options=[{"label": i, "value": i} for i in ontology_names_as_list],
+                        html.P("Description",
+                               className=accordian_item_format,
+                               style={"text-decoration": "underline"}),
+                        dcc.Markdown(
+                            id="ontology-description",
+                            children=[],
+                            className=accordian_item_format
                         ),
                         html.Br(),
-                        html.P("Endpoint", className=accordian_item_format),
+                        html.P("Endpoint",
+                               className=accordian_item_format,
+                               style={"text-decoration": "underline"}),
+                        dcc.Markdown(
+                            id="ontology-endpoint",
+                            children=[],
+                            className=accordian_item_format
+                        ),
+
+                        html.Br(),
+                        html.P("Select SPARQL Query",
+                               className=accordian_item_format),
                         dcc.Dropdown(
-                            id="endpoint-select",
+                            id="sparql-query-select",
                             disabled=True,
                             options=[{"label": i, "value": i} for i in ontology_names_as_list],
                         ),
@@ -115,7 +129,7 @@ sidebar_container = html.Div(
                             children=[
                                 dbc.Button(
                                     id="submit-button",
-                                    children="Submit Query",
+                                    children="Submit SPARQL Query",
                                     n_clicks=0,
                                     disabled=True,
                                     style={'width': '100%'},
@@ -290,47 +304,48 @@ app.layout = dbc.Container(
 # callbacks
 #
 @app.callback(
-    Output("query-select", "options"),
-    Output("query-select", "disabled"),
+    Output("ontology-description", "children"),
+    Output("ontology-endpoint", "children"),
+    Output("sparql-query-select", "options"),
+    Output("sparql-query-select", "disabled"),
     [Input("ontology-select", "value")]
 )
 def ontology_select_dropdown_selected(ontology_selected):
     if ontology_selected is None:
-        return [{"label": i, "value": i} for i in ontology_names_as_list], True
+        return '', '', [{"label": i, "value": i} for i in ontology_names_as_list], True
 
+    # get attributes regarding the selected ontology
     df = ontologies_df.query(f'Name == "{ontology_selected}"')
-    query_file_location = df['Sparql'].unique()[0]
-    query_df = pd.read_csv(DATA_PATH.joinpath(query_file_location))
-    query_name_list = query_df['Name'].unique()
-    options = []
+    ontology_description = df['Description'].unique()[0]
+    ontology_endpoint = df['Endpoint'].unique()[0]
+
+    sparql_query_file = df['Sparql'].unique()[0]
+    sparql_query_df = pd.read_csv(DATA_PATH.joinpath(sparql_query_file))
+    query_name_list = sparql_query_df['Name'].unique()
+    sparql_query_options = []
     for q in query_name_list:
-        options.append({'label': q, 'value': q})
-    return options, False
+        sparql_query_options.append({'label': q, 'value': q})
+
+    return ontology_description, ontology_endpoint, sparql_query_options, False
 
 
 @app.callback(
-    Output("endpoint-select", "options"),
-    Output("endpoint-select", "disabled"),
     Output("sparql-query-text", "value"),
     Output("sparql-query-text", "disabled"),
     Output("submit-button", "disabled"),
-    [Input("query-select", "value")],
+    [Input("sparql-query-select", "value")],
     [State("ontology-select", "value")]
 )
-def query_select_dropdown_selected(query_selected, ontology_selected):
+def sparql_query_select_dropdown_selected(query_selected, ontology_selected):
     if ontology_selected is None or query_selected is None:
-        return [{"label": i, "value": i} for i in ontology_names_as_list], True, '', True, True
+        return '', True, True
 
     df = ontologies_df.query(f'Name == "{ontology_selected}"')
-    query_file_location = df['Sparql'].unique()[0]
-    query_df = pd.read_csv(DATA_PATH.joinpath(query_file_location))
-    query_df.query(f'Name == "{query_selected}"', inplace=True)
-    endpoint_list = query_df['Endpoint'].unique()
-    endpoint_options = []
-    for e in endpoint_list:
-        endpoint_options.append({'label': e, 'value': e})
-    sparql_query = query_df['Sparql'].unique()[0]
-    return endpoint_options, False, sparql_query, False, False
+    sparql_query_file = df['Sparql'].unique()[0]
+    sparql_query_df = pd.read_csv(DATA_PATH.joinpath(sparql_query_file))
+    sparql_query_df.query(f'Name == "{query_selected}"', inplace=True)
+    sparql_query = sparql_query_df['Sparql'].unique()[0]
+    return sparql_query, False, False
 
 
 @app.callback(
@@ -338,17 +353,17 @@ def query_select_dropdown_selected(query_selected, ontology_selected):
     Output("query-results-table", "columns"),
     Output("ontology-view", "elements"),
     [Input("submit-button", "n_clicks")],
-    [State("endpoint-select", "value"),
+    [State("ontology-endpoint", "children"),
      State("sparql-query-text", "value")]
 )
-def submit_button_selected(n_clicks, endpoint_selected, sparql_query_text):
-    if n_clicks == 0 or endpoint_selected is None or sparql_query_text is None:
+def submit_button_selected(n_clicks, ontology_endpoint, sparql_query_text):
+    if n_clicks == 0 or ontology_endpoint is None or sparql_query_text is None:
         data = ontologies_df.to_dict('records')
         columns = [{'id': c, 'name': c} for c in ontologies_df.columns]
         return data, columns, ontology_view_elements
 
-    results_table, results_columns = get_sparql_query_results(endpoint_selected, sparql_query_text)
-    cytoscape_elements = get_cytoscape_elements(endpoint_selected)
+    results_table, results_columns = get_sparql_query_results(ontology_endpoint, sparql_query_text)
+    cytoscape_elements = get_cytoscape_elements(ontology_endpoint)
 
     return results_table, results_columns, cytoscape_elements
 
