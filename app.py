@@ -28,6 +28,7 @@ accordian_item_format = "bg-light text-black text-center"
 textarea_format = "bg-dark text-white text-left"
 tab_active_format = "bg-dark text-white text-center"
 tab_inactive_format = "bg-light text-black text-center"
+view_control_panel_format = "bg-light text-black text-center"
 
 # instantiate the Dash server
 #
@@ -84,17 +85,19 @@ sidebar_container = html.Div(
                                     n_clicks=0,
                                     disabled=True,
                                     style={'width': '100%'},
-                                    className=accordian_item_format),
+                                ),
                             ],
                         ),
                     ],
                     title="Ontology",
+                    className=accordian_item_format
                 ),
                 dbc.AccordionItem(
                     [
                         ThemeChangerAIO(aio_id="theme"),
                     ],
                     title="Theme",
+                    className=accordian_item_format
                 ),
             ],
             start_collapsed=False, always_open=True, flush=True,
@@ -108,23 +111,40 @@ sidebar_container = html.Div(
 # view tab
 #
 body_container_view = \
-    html.Div(
+    dbc.Row(
         [
-            dcc.Dropdown(
-                id='ontology-view-update-layout',
-                value='grid',
-                clearable=False,
-                options=[
-                    {'label': name.capitalize(), 'value': name}
-                    for name in ['random', 'grid', 'circle', 'concentric', 'breadthfirst', 'cose']
-                ]
+            dbc.Col(
+                [
+                    html.Div(
+                        [
+                            html.Br(),
+                            html.P("Control Panel", className=accordian_item_format),
+                            dcc.Dropdown(
+                                id='ontology-view-update-layout',
+                                value='grid',
+                                clearable=False,
+                                options=[
+                                    {'label': name.capitalize(), 'value': name}
+                                    for name in ['random', 'grid', 'circle', 'concentric', 'breadthfirst']
+                                ],
+                            ),
+                        ],
+                    ),
+                    ],
+                className=view_control_panel_format,
+                width=1,
             ),
-            cyto.Cytoscape(
-                id='ontology-view',
-                elements=ontology_view_elements,
-                style={'width': '100%', 'height': '1600px'},
-            )
-        ],
+            dbc.Col(
+                [
+                    cyto.Cytoscape(
+                        id='ontology-view',
+                        elements=ontology_view_elements,
+                        style={'width': '100%', 'height': '1000px'},
+                    )
+                ],
+                width=10,
+            ),
+        ]
     )
 
 
