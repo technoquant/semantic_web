@@ -1,32 +1,32 @@
-Name,Endpoint,Sparql
-"Show some data","data\pizza\pizza.owl","
+Name,Sparql
+"Show some data","
 SELECT *
 WHERE {
     ?subject ?predicate ?object .
 }
 LIMIT 10"
-"Number of triplets","data\pizza\pizza.owl","
+"Number of triplets","
 SELECT (COUNT(*) AS ?number)
 where { ?s ?p ?o }"
-"What classes are declared?","data\pizza\pizza.owl","
+"What classes are declared?","
 SELECT distinct ?class
 WHERE {
     ?class a owl:Class
 }
 order by ?class"
-"Classes instances","data\pizza\pizza.owl","
+"Class instances","
 SELECT ?class (count(?instance) as ?numberOfInstances)
 WHERE {
     ?instance a ?class .
 }
 group by ?class
 order by desc(?numberOfInstances)"
-"Property statistics","data\pizza\pizza.owl","
+"Property statistics","
 SELECT ?property (COUNT(?property) AS ?propTotal)
 WHERE { ?s ?property ?o . }
 GROUP BY ?property
 ORDER BY DESC(?propTotal)"
-"List hot spices","data\pizza\pizza.owl","
+"List hot spices","
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -38,14 +38,14 @@ SELECT distinct ?s ?type WHERE {
   ?restriction owl:someValuesFrom pizza:Hot .
   OPTIONAL {?s rdf:type ?type }
 }"
-"List all classes","data\pizza\pizza.owl","
+"List all classes","
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT DISTINCT ?type
 WHERE {
   ?s a ?type.
 }"
-"List classes of a given prefix","data\pizza\pizza.owl","
+"List classes of a given prefix","
 PREFIX bc: <http://www.co-ode.org/ontologies/pizza/pizza.owl#>
 
 SELECT DISTINCT ?subject ?label ?supertype
@@ -53,7 +53,7 @@ WHERE {
   ?subject a ?type.
   FILTER( STRSTARTS(STR(?type),str(bc:)) )
 }"
-"Class hierarchy","data\pizza\pizza.owl","
+"Class hierarchy","
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -73,7 +73,7 @@ WHERE {
         ?subject != owl:NamedIndividual &&
         ?subject != owl:Ontology )
 } ORDER BY ?subject"
-"List class hierarchy","data\pizza\pizza.owl","
+"List class hierarchy","
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
