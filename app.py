@@ -21,10 +21,13 @@ ontology_view_elements = []
 
 # format colors: primary, secondary, success, info, warning, danger, light, dark, link
 # p-2 mb-2 text-left
-title_format = "bg-secondary text-white text-left"
-form_heading_format = "bg-primary text-white text-left"
-field_label_format = "bg-secondary text-white text-left"
-input_format = "text-danger"
+title_format = "bg-light text-black text-left"
+footer_format = "bg-dark text-white text-left"
+accordian_format = "bg-dark text-white text-center"
+accordian_item_format = "bg-light text-black text-center"
+textarea_format = "bg-dark text-white text-left"
+tab_active_format = "bg-dark text-white text-center"
+tab_inactive_format = "bg-light text-black text-center"
 
 # instantiate the Dash server
 #
@@ -35,42 +38,37 @@ app.config.suppress_callback_exceptions = True
 ####################################################################################################################
 # top container
 #
-top_container = html.H1("Semantic Web Dashboard",
-                        className="bg-primary text-white p-2 mb-2 text-left")
+top_container = html.H1("Semantic Web Dashboard", className=title_format)
 
 ####################################################################################################################
 # bottom container
 #
-bottom_container = html.H6("Brandeis University International Business School",
-                           className="bg-primary text-white p-2 mb-2 text-left")
+bottom_container = html.H6("Brandeis University International Business School", className=footer_format)
 
 ####################################################################################################################
 # sidebar container
 #
 sidebar_container = html.Div(
     [
-        html.H4(
-            "Ontology", className="bg-primary text-white p-2 mb-2 text-center"
-        ),
         dbc.Accordion(
             [
                 dbc.AccordionItem(
                     [
-                        dcc.Markdown("Select Ontology", className="bg-primary text-white p-2 mb-2 text-center"),
+                        html.P("Select Ontology", className=accordian_item_format),
                         dcc.Dropdown(
                             id="ontology-select",
                             placeholder="Select",
                             options=[{"label": i, "value": i} for i in ontology_list],
                         ),
                         html.Br(),
-                        html.P("Select Query", className="bg-primary text-white p-2 mb-2 text-center"),
+                        html.P("Select Query", className=accordian_item_format),
                         dcc.Dropdown(
                             id="query-select",
                             disabled=True,
                             options=[{"label": i, "value": i} for i in ontology_list],
                         ),
                         html.Br(),
-                        html.P("Endpoint", className="bg-primary text-white p-2 mb-2 text-center"),
+                        html.P("Endpoint", className=accordian_item_format),
                         dcc.Dropdown(
                             id="endpoint-select",
                             disabled=True,
@@ -82,11 +80,11 @@ sidebar_container = html.Div(
                             children=[
                                 dbc.Button(
                                     id="submit-button",
-                                    children="Submit",
+                                    children="Submit Query",
                                     n_clicks=0,
                                     disabled=True,
                                     style={'width': '100%'},
-                                    className="bg-primary text-white p-2 mb-2 text-center"),
+                                    className=accordian_item_format),
                             ],
                         ),
                     ],
@@ -100,6 +98,7 @@ sidebar_container = html.Div(
                 ),
             ],
             start_collapsed=False, always_open=True, flush=True,
+            className=accordian_format
         ),
     ],
 )
@@ -111,16 +110,13 @@ sidebar_container = html.Div(
 body_container_view = \
     html.Div(
         [
-            html.H4(
-                "Ontology Visualization", className="bg-primary text-white p-2 mb-2 text-center"
-            ),
             dcc.Dropdown(
                 id='ontology-view-update-layout',
                 value='grid',
                 clearable=False,
                 options=[
                     {'label': name.capitalize(), 'value': name}
-                    for name in ['random', 'grid', 'circle', 'concentric', 'breadthfirst', 'cose' ]
+                    for name in ['random', 'grid', 'circle', 'concentric', 'breadthfirst', 'cose']
                 ]
             ),
             cyto.Cytoscape(
@@ -146,27 +142,23 @@ def update_layout(layout):
 body_container_query = \
     html.Div(
         [
-            html.H4(
-                "Query the Ontology", className="bg-primary text-white p-2 mb-2 text-center"
-            ),
             dbc.Accordion(
                 [
                     dbc.AccordionItem(
                         [
-                            html.P("Enter a SPARQL Query", className="bg-primary text-white p-2 mb-2 text-left"),
                             dcc.Textarea(
                                 id='sparql-query-text',
                                 value='',
                                 cols='4',
                                 disabled=True,
-                                style={'width': '100%'},
+                                style={'width': '100%', 'height': 200},
+                                className=textarea_format
                             ),
                         ],
-                        title="SPARQL",
+                        title="SPARQL Query",
                     ),
                     dbc.AccordionItem(
                         [
-                            html.P("Query Results", className="bg-primary text-white p-2 mb-2 text-left"),
                             dash_table.DataTable(
                                 id='query-results-table',
                                 data=df_query_results.to_dict('records'),
@@ -187,7 +179,7 @@ body_container_query = \
                                 export_format="csv",
                             )
                         ],
-                        title="RESULTS",
+                        title="Query Results",
                     ),
                 ],
                 start_collapsed=False, always_open=True, flush=True,
@@ -198,10 +190,18 @@ body_container_query = \
 ####################################################################################################################
 # body container
 #
-tab_0 = dbc.Tab(body_container_view, label="VIEW")
-tab_1 = dbc.Tab(body_container_query, label="QUERY")
+tab_view = dbc.Tab(
+    body_container_view, label="View",
+    label_class_name=tab_inactive_format,
+    active_label_class_name=tab_active_format,
+)
+tab_query = dbc.Tab(
+    body_container_query, label="Query",
+    label_class_name=tab_inactive_format,
+    active_label_class_name=tab_active_format,
+)
 body_container = dbc.Card(
-    dbc.Tabs([tab_0, tab_1])
+    dbc.Tabs([tab_view, tab_query])
 )
 
 ####################################################################################################################
@@ -229,7 +229,6 @@ app.layout = dbc.Container(
         bottom_container,
     ],
     fluid=True,
-    className='dbc',
 )
 
 
