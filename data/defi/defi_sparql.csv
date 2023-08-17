@@ -1,0 +1,45 @@
+Name,Sparql
+"Show ticker prices","
+#
+# Show ticker prices over a date range
+#
+# Input:
+#
+# <<ticker1: dropdown1>>
+# <<ticker2: dropdown2>>
+# <<ticker3: dropdown3>>
+# <<ticker4: dropdown4>>
+# <<start_date: start_date>>
+# <<end_date: end_date>>
+# <<precision: precision>>
+#
+# Output:
+#
+
+PREFIX ns1: <http://www.semanticweb.org/sichengyun/ontologies/2023/6/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT
+(ROUND(?ticker1Price*precision)/precision AS ?ticker1Price)
+(ROUND(?ticker2Price*precision)/precision AS ?ticker2Price)
+(ROUND(?ticker3Price*precision)/precision AS ?ticker3Price)
+(ROUND(?ticker4Price*precision)/precision AS ?ticker4Price)
+?date
+
+WHERE {
+?ticker1 ns1:ticker1_date ?date ;
+       ns1:ticker1_price ?ticker1Price .
+
+?ticker2 ns1:ticker2_date ?date ;
+       ns1:ticker2_price ?ticker2Price .
+
+?ticker3 ns1:ticker3_date ?date ;
+       ns1:ticker3_price ?ticker3Price .
+
+?ticker4 ns1:ticker4_date ?date ;
+       ns1:ticker4_price ?ticker4Price .
+
+FILTER(?date >= ""start_date""^^xsd:date && ?date <= ""end_date""^^xsd:date)
+}
+ORDER BY ?date
+"
