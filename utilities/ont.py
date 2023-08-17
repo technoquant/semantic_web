@@ -16,9 +16,16 @@ def get_sparql_query_results(endpoint, query_text):
     """
     g = build_ontology_as_rdflib_graph(endpoint)
     query_results = g.query(query_text)
-    result_list_df = pd.DataFrame(query_results.bindings)
-    columns = [{'name': index, 'id': index} for index in result_list_df.columns]
-    return result_list_df.to_dict('records'), columns
+    results_list_df = pd.DataFrame(query_results.bindings)
+
+    records = results_list_df.to_dict('records')
+    columns = [{'name': index, 'id': index} for index in results_list_df.columns]
+    dataframe = pd.DataFrame(
+        data=([None if x is None else x.toPython() for x in row] for row in query_results),
+        columns=[str(x) for x in query_results.vars],
+    )
+
+    return records, columns, dataframe
 
 
 def build_html_visualizer(endpoint):
