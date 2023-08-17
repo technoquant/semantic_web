@@ -1,2 +1,3 @@
 Name,Description,Endpoint,Sparql
-"Pizza","Pizza With Toppings","data/pizza/pizza.owl","pizza/pizza_sparql.csv"
+Pizza,Pizza With Toppings,data/pizza/pizza.owl,pizza/pizza_sparql.csv
+Defi,Defi,data/defi/defi.owl,defi/defi_sparql.csv
