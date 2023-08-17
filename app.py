@@ -1,7 +1,6 @@
 import pathlib
 import pandas as pd
 import dash_daq as daq
-from datetime import date
 import math
 
 import dash
@@ -364,15 +363,13 @@ body_container_query = \
                                                    className=accordian_item_format,
                                                    style={"font-weight": "bold"}
                                                    ),
-                                            daq.Knob(
-                                                id='precision-knob-select',
+                                            daq.NumericInput(
+                                                id='precision-select',
                                                 label="Number of Decimal Points",
                                                 labelPosition='bottom',
                                                 value=2,
                                                 min=0,
-                                                max=8,
-                                                scale={'start': 0, 'labelInterval': 2, 'interval': 2},
-                                                color={"ranges": {"green": [0, 4], "yellow": [4, 6], "red": [6, 8]}},
+                                                max=6,
                                                 disabled=True
                                             ),
                                         ],
@@ -390,41 +387,98 @@ body_container_query = \
                     ),
                     dbc.AccordionItem(
                         [
-                            dcc.Textarea(
-                                id='sparql-query-text',
-                                value='',
-                                cols='4',
-                                disabled=True,
-                                style={'width': '100%', 'height': 200},
-                                className=textarea_format
-                            ),
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                        [
+                                            html.P("Text",
+                                                   className=accordian_item_format,
+                                                   style={"font-weight": "bold"}
+                                                   ),
+                                            dcc.Textarea(
+                                                id='sparql-query-text',
+                                                value='',
+                                                cols='4',
+                                                disabled=True,
+                                                style={'width': '100%', 'height': 200},
+                                                className=textarea_format
+                                            ),
+                                        ],
+                                        width=6,
+                                    ),
+                                    dbc.Col(
+                                        [
+                                            html.P("Template",
+                                                   className=accordian_item_format,
+                                                   style={"font-weight": "bold"}
+                                                   ),
+                                            dcc.Textarea(
+                                                id='sparql-query-template-text',
+                                                value='',
+                                                cols='4',
+                                                disabled=True,
+                                                style={'width': '100%', 'height': 200},
+                                                className=textarea_format
+                                            ),
+                                        ],
+                                        width=6,
+                                    ),
+                                ],
+                            )
+
                         ],
                         title="Query",
                     ),
                     dbc.AccordionItem(
                         [
-                            dash_table.DataTable(
-                                id='query-results-table',
-                                data=df_query_results.to_dict('records'),
-                                columns=[{'id': c, 'name': c} for c in ontologies_df.columns],
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                        [
+                                            html.P("Chart",
+                                                   className=accordian_item_format,
+                                                   style={"font-weight": "bold"}
+                                                   ),
+                                            dcc.Graph(
+                                                id="query-results-chart"
+                                            )
+                                        ],
+                                        width=6,
+                                    ),
+                                    dbc.Col(
+                                        [
+                                            html.P("Table",
+                                                   className=accordian_item_format,
+                                                   style={"font-weight": "bold"}
+                                                   ),
+                                            dash_table.DataTable(
+                                                id='query-results-table',
+                                                data=df_query_results.to_dict('records'),
+                                                columns=[{'id': c, 'name': c} for c in ontologies_df.columns],
 
-                                page_current=0,
-                                page_size=25,
-                                fixed_rows={'headers': True},
+                                                page_current=0,
+                                                page_size=25,
+                                                fixed_rows={'headers': True},
 
-                                style_cell={'textAlign': 'left'},
-                                style_as_list_view=True,
+                                                style_cell={'textAlign': 'left'},
+                                                style_as_list_view=True,
 
-                                row_deletable=False,
-                                editable=False,
-                                filter_action="native",
-                                sort_action="native",
-                                style_table={"overflowX": "auto", 'overflowY': 'auto'},
-                                export_format="csv",
+                                                row_deletable=False,
+                                                editable=False,
+                                                filter_action="native",
+                                                sort_action="native",
+                                                style_table={"overflowX": "auto", 'overflowY': 'auto'},
+                                                export_format="csv",
+                                            )
+                                        ],
+                                        width=6,
+                                    ),
+                                ],
                             )
                         ],
                         title="Query Results",
                     ),
+
                 ],
                 start_collapsed=False, always_open=True, flush=True,
             ),
@@ -505,8 +559,8 @@ def ontology_select_dropdown_selected(ontology_selected):
 
 
 @app.callback(
-    Output("sparql-query-text", "value"),
-    Output("sparql-query-text", "disabled"),
+    Output("sparql-query-template-text", "value"),
+    Output("sparql-query-template-text", "disabled"),
     Output("submit-button", "disabled"),
     Output("dropdown1-select", "disabled"),
     Output("dropdown1-select", "placeholder"),
@@ -521,7 +575,7 @@ def ontology_select_dropdown_selected(ontology_selected):
     Output("dropdown4-select", "placeholder"),
     Output("dropdown4-select", "options"),
     Output("date-range-picker-select", "disabled"),
-    Output("precision-knob-select", "disabled"),
+    Output("precision-select", "disabled"),
     [Input("sparql-query-select", "value")],
     [State("ontology-select", "value")]
 )
@@ -540,11 +594,11 @@ def sparql_query_select_dropdown_selected(query_selected, ontology_selected):
     sparql_query_file = df['Sparql'].unique()[0]
     sparql_query_df = pd.read_csv(DATA_PATH.joinpath(sparql_query_file))
     sparql_query_df.query(f'Name == "{query_selected}"', inplace=True)
-    sparql_query = sparql_query_df['Sparql'].unique()[0]
+    sparql_query_template = sparql_query_df['Sparql'].unique()[0]
 
     # determine which of the parameters control are needed for this query
 
-    return (sparql_query, False, False,
+    return (sparql_query_template, False, False,
             False, 'Select', [{'label': t, 'value': t} for t in tickers_as_list],
             False, 'Select', [{'label': t, 'value': t} for t in tickers_as_list],
             False, 'Select', [{'label': t, 'value': t} for t in tickers_as_list],
@@ -554,40 +608,48 @@ def sparql_query_select_dropdown_selected(query_selected, ontology_selected):
 
 
 @app.callback(
+    Output("sparql-query-text", "value"),
+    Output("sparql-query-text", "disabled"),
     Output("query-results-table", "data"),
     Output("query-results-table", "columns"),
     Output("ontology-view", "elements"),
+    Output("query-results-chart", "figure"),
     [Input("submit-button", "n_clicks")],
     [State("ontology-endpoint", "children"),
-     State("sparql-query-text", "value"),
+     State("sparql-query-template-text", "value"),
      State("dropdown1-select", "value"),
      State("dropdown2-select", "value"),
      State("dropdown3-select", "value"),
      State("dropdown4-select", "value"),
      State("date-range-picker-select", "start_date"),
      State("date-range-picker-select", "end_date"),
-     State("precision-knob-select", "value")
+     State("precision-select", "value")
      ]
 )
 def submit_button_selected(n_clicks, ontology_endpoint, sparql_query_template,
                            dropdown_1, dropdown_2, dropdown_3, dropdown_4,
                            start_date, end_date, precision):
+    import plotly.express as px
+    figure = px.line(x=['a', 'b', 'c', 'd'], y=[1, 2, 2, 1], title='placeholder figure')
+
     if n_clicks == 0 or ontology_endpoint is None or sparql_query_template is None:
         data = ontologies_df.to_dict('records')
         columns = [{'id': c, 'name': c} for c in ontologies_df.columns]
-        return data, columns, ontology_view_elements
+        return '', True, data, columns, ontology_view_elements, figure
 
     sparql_query_text = sparql_query_template
-    start, end = "<<", ">>"
+
+    # replace according to meta tags
+    start_tag, end_tag = "<<", ">>"
     start_index = 0
     while True:
-        idx_1 = sparql_query_template.find(start, start_index)
+        idx_1 = sparql_query_template.find(start_tag, start_index)
         if idx_1 == -1:
             break
-        idx_2 = sparql_query_template.find(end, start_index+len(start))
+        idx_2 = sparql_query_template.find(end_tag, start_index + len(start_tag))
         if idx_2 == -1:
             break
-        tag = sparql_query_template[idx_1+len(start): idx_2]
+        tag = sparql_query_template[idx_1 + len(start_tag): idx_2]
         name_value = tag.split(':')
 
         if name_value[1].strip() == 'dropdown1':
@@ -603,15 +665,29 @@ def submit_button_selected(n_clicks, ontology_endpoint, sparql_query_template,
         elif name_value[1].strip() == 'end_date':
             sparql_query_text = sparql_query_text.replace(name_value[0], end_date)
         elif name_value[1].strip() == 'precision':
-            sparql_query_text = sparql_query_text.replace('precision', str(math.pow(10, int(precision))))
-
+            sparql_query_text = sparql_query_text.replace('precision', str(math.pow(10, precision)))
         start_index = idx_2
 
-    print(sparql_query_text)
-    results_table, results_columns = get_sparql_query_results(ontology_endpoint, sparql_query_text)
+    results_table, results_columns, results_df = get_sparql_query_results(ontology_endpoint, sparql_query_text)
+
+    data = []
+    for col in results_df.columns:
+        if col == 'date':
+            continue
+        d = dict(
+            type="line",
+            x=results_df['date'],
+            y=results_df[col],
+            name=col,
+        )
+        data.append(d)
+
+    layout = {"title": "Results", "dragmode": "select", "showlegend": True, "autosize": True}
+    figure = dict(data=data, layout=layout)
+
     cytoscape_elements = get_cytoscape_elements(ontology_endpoint)
 
-    return results_table, results_columns, cytoscape_elements
+    return sparql_query_text, False, results_table, results_columns, cytoscape_elements, figure
 
 
 ##############################################
